@@ -1,23 +1,25 @@
 package data.contract;
 
-//TODO: change to TaskModel add(), update(), get(), getAllXxx()
+import java.util.Optional;
+
+import data.model.Task;
     
 public interface TaskRepository {
 
-    void add();
-    void update();
+    Task add(String description);
+    Task update(long id, String description);
 
-    void delete();
+    void delete(long id);
     
-    void get();
-    void getAll();
+    Optional<Task> get(long id);
+    Optional<Task[]> getAll();
 
-    void getAllDone();
-    void getAllNotDone();
+    Optional<Task[]> getAllDone();
+    Optional<Task[]> getAllNotDone();
 
-    void getAllInProgress();
+    Optional<Task[]> getAllInProgress();
 
-    void markDone();
-    void markInProgress();
+    Task markDone();
+    Task markInProgress();
 
 }
