@@ -1,6 +1,6 @@
 # Task Tracker (roadmap.sh Challenge)
 
-This is a solution to the [Task Tracker](https://roadmap.sh/projects/task-tracker) challenge from [roadmap.sh](https://roadmap.sh). The challenge description and requirements can be found in the [task.md](file:///home/watashi/Projects/roadmap.sh/TaskTracker/task-cli/task.md) file.
+This is a solution to the [Task Tracker](https://roadmap.sh/projects/task-tracker) challenge from [roadmap.sh](https://roadmap.sh). The challenge description and requirements can be found in the [task.md](task.md) file.
 
 I have chosen **Java** to implement this project, adhering to the constraint of not using any external libraries or frameworks.
 
@@ -18,7 +18,7 @@ I have chosen **Java** to implement this project, adhering to the constraint of 
 
 ### Compilation
 
-First, compile the Java source files. The entry point is defined in [Application.java](file:///home/watashi/Projects/roadmap.sh/TaskTracker/task-cli/src/Application.java). Run the following command from the project root directory:
+First, compile the Java source files. The entry point is defined in [Application.java](src/Application.java). Run the following command from the project root directory:
 
 ```bash
 javac -d bin -sourcepath src src/Application.java
