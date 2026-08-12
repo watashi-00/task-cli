@@ -1,8 +1,8 @@
-package repository.contract;
+package data.contract;
 
 //TODO: change to TaskModel add(), update(), get(), getAllXxx()
     
-public interface ImplTaskRepository {
+public interface TaskRepository {
 
     void add();
     void update();
@@ -16,5 +16,8 @@ public interface ImplTaskRepository {
     void getAllNotDone();
 
     void getAllInProgress();
+
+    void markDone();
+    void markInProgress();
 
 }
