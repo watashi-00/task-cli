@@ -1,5 +1,6 @@
 package data.repo;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import data.model.Task;
 
@@ -129,27 +131,25 @@ public class JsonTaskRepository implements data.contract.TaskRepository {
     }
 
     private void saveToFile() {
-        StringBuilder json = new StringBuilder("[\n");
-        for (int i = 0; i < tasks.size(); i++) {
-            Task t = tasks.get(i);
-            json.append(String.format("  { \"id\": %d, \"description\": \"%s\", \"bitfields\": %d, \"createdAt\": \"%s\", \"updatedAt\": \"%s\" }",
-                    t.getId(),
-                    escapeJson(new String(t.getDescription())),
-                    t.getBitfields(),
-                    t.getCreatedAt().toString(),
-                    t.getUpdatedAt().toString()));
-            
-            if (i < tasks.size() - 1) {
-                json.append(",");
+        try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
+            writer.write("[\n");
+            for (int i = 0; i < tasks.size(); i++) {
+                Task t = tasks.get(i);
+                writer.write(String.format("  { \"id\": %d, \"description\": \"%s\", \"bitfields\": %d, \"createdAt\": \"%s\", \"updatedAt\": \"%s\" }",
+                        t.getId(),
+                        escapeJson(new String(t.getDescription())),
+                        t.getBitfields(),
+                        t.getCreatedAt().toString(),
+                        t.getUpdatedAt().toString()));
+                
+                if (i < tasks.size() - 1) {
+                    writer.write(",");
+                }
+                writer.write("\n");
             }
-            json.append("\n");
-        }
-        json.append("]");
-
-        try {
-            Files.writeString(filePath, json.toString());
+            writer.write("]");
         } catch (IOException e) {
-            throw new RuntimeException("Error saving JSON", e);
+            throw new RuntimeException("Error saving JSON via BufferedWriter", e);
         }
     }
 
@@ -158,31 +158,27 @@ public class JsonTaskRepository implements data.contract.TaskRepository {
             return;
         }
 
-        try {
-            String content = Files.readString(filePath);
-            Pattern objectPattern = Pattern.compile("\\{(.*?)\\}", Pattern.DOTALL);
-            Matcher objectMatcher = objectPattern.matcher(content);
+        try (Stream<String> lines = Files.lines(filePath)) {
+            lines.filter(line -> line.contains("{") && line.contains("}"))
+                .forEach(line -> {
+                    Map<String, String> jsonMap = parseJsonBlockToMap(line);
 
-            while (objectMatcher.find()) {
-                String rawJsonBlock = objectMatcher.group(1);
-                Map<String, String> jsonMap = parseJsonBlockToMap(rawJsonBlock);
+                    long id = Long.parseLong(jsonMap.getOrDefault("id", "0"));
+                    String description = jsonMap.getOrDefault("description", "");
+                    byte bitfields = Byte.parseByte(jsonMap.getOrDefault("bitfields", "0"));
 
-                long id = Long.parseLong(jsonMap.getOrDefault("id", "0"));
-                String description = jsonMap.getOrDefault("description", "");
-                byte bitfields = Byte.parseByte(jsonMap.getOrDefault("bitfields", "0"));
-                
-                Instant createdAt = jsonMap.containsKey("createdAt") 
-                    ? Instant.parse(jsonMap.get("createdAt")) 
-                    : Instant.now();
-                    
-                Instant updatedAt = jsonMap.containsKey("updatedAt") 
-                    ? Instant.parse(jsonMap.get("updatedAt")) 
-                    : Instant.now();
+                    Instant createdAt = jsonMap.containsKey("createdAt") 
+                        ? Instant.parse(jsonMap.get("createdAt")) 
+                        : Instant.now();
 
-                tasks.add(Task.restoreFromStorage(id, description, bitfields, createdAt, updatedAt));
-            }
+                    Instant updatedAt = jsonMap.containsKey("updatedAt") 
+                        ? Instant.parse(jsonMap.get("updatedAt")) 
+                        : Instant.now();
+
+                    tasks.add(Task.restoreFromStorage(id, description, bitfields, createdAt, updatedAt));
+                });
         } catch (IOException e) {
-            throw new RuntimeException("Error loading JSON", e);
+            throw new RuntimeException("Error loading JSON via Stream", e);
         }
     }
 
